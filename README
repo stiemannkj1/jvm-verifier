@@ -3,11 +3,21 @@
    Kresten's Verifier for Java Byte Codes
    ======================================
 
+   Building
+   --------------------------------------
+
+   Build with Java 11:
+
+   ```
+   (cd src && javac --release 7 -d ../target/ $(find . -name '*.java')) &&
+       jar cvf target/verifier.jar -C target/ .
+   ```
+
 
    The interface to the verifier is currently very crude.  
-   To run it, type
+   To run it (using Java 7), type
 
-     prompt>  java verify.Tool  class-or-file-name ...
+     prompt> java -cp target/verifier.jar verify.Tool class-or-file-name ...
 
    If you give it a name of a class file, it will try to figure out
    the corresponding class name, (removing leading "./", and
@@ -16,7 +26,7 @@
    To start off, you may want to verify the verifier. On unix, you can
    write something like this,
 
-     prompt>  java verify.Tool `find verify/ -name '*.class'`
+     prompt> java -cp target/verifier.jar verify.Tool `find verify/ -name '*.class'`
 
 
    As it runs, it will print a '.' for each method checked, and a '#'
