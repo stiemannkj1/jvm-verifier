@@ -24,7 +24,12 @@
 
 package verify;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Hashtable;
+import java.util.Objects;
 import verify.classfile.ClassFile;
 import verify.path.SearchPath;
 import verify.type.ClassInfo;
@@ -94,7 +99,8 @@ class Tool {
       System.exit(0);
     }
 
-    ClassFileLoader provider = new ClassFileLoader((String) options.get("classpath"));
+    ClassFileLoader provider =
+        new ClassFileLoader((String) options.get("classpath"), Tool.class.getClassLoader());
 
     verify.type.TypeContext context = new verify.type.TypeContext(provider);
 
@@ -190,12 +196,14 @@ class Tool {
 
 class ClassFileLoader implements ClassInfoProvider {
   final SearchPath path;
+  private final ClassLoader classLoader;
   char filesep = System.getProperty("file.separator", "/").charAt(0);
 
   Hashtable table = new Hashtable();
 
-  ClassFileLoader(String loadpath) {
+  ClassFileLoader(String loadpath, final ClassLoader classLoader) {
     path = new SearchPath(loadpath);
+    this.classLoader = Objects.requireNonNull(classLoader);
   }
 
   static long total_loading = 0L;
@@ -210,6 +218,10 @@ class ClassFileLoader implements ClassInfoProvider {
       String filename = class_name.replace('.', filesep) + ".class";
 
       byte[] data = path.getBytes(filename);
+
+      if (data == null) {
+        data = getBytes(classLoader.getResource(filename));
+      }
 
       if (data == null) {
         return null;
@@ -243,5 +255,24 @@ class ClassFileLoader implements ClassInfoProvider {
     ClassFile file = load(name);
     if (file != null) return new ClassFileInfo(file);
     else return null;
+  }
+
+  private static final int SIZE_8_MB = 1024 * 8;
+
+  private static byte[] getBytes(final URL url) {
+    try (InputStream is = url.openStream();
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+
+      final byte[] data = new byte[SIZE_8_MB];
+      int bytesRead;
+
+      while ((bytesRead = is.read(data, 0, data.length)) != -1) {
+        buffer.write(data, 0, bytesRead);
+      }
+
+      return buffer.toByteArray();
+    } catch (final IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
