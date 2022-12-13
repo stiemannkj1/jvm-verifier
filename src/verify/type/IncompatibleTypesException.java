@@ -1,5 +1,5 @@
 /*
- *  IncompatibleTypesException.java 
+ *  IncompatibleTypesException.java
  *
  *  Copyright (C) 1999 by Kresten Krab Thorup <krab@daimi.au.dk>
  *
@@ -22,43 +22,32 @@
  *
  */
 
-
 package verify.type;
 
-public class IncompatibleTypesException extends verify.VerificationException
-{
-  public IncompatibleTypesException (String txt)
-  {
-    super (txt);
+public class IncompatibleTypesException extends verify.VerificationException {
+  public IncompatibleTypesException(String txt) {
+    super(txt);
   }
 
-  public IncompatibleTypesException (Type from, Type to)
-  {
-    super (message1 (from, to));
-  }
-  
-  private static String message1 (Type from, Type to)
-  {
-    return "incompatible assignment from " 
-           + from.toString ()
-           + " to "
-           + to.toString();
+  public IncompatibleTypesException(Type from, Type to) {
+    super(message1(from, to));
   }
 
-  public IncompatibleTypesException (String text, 
-				     Type found, 
-				     int expected_storage_class)
-  {
-    super (message2 (text, found, expected_storage_class));
+  private static String message1(Type from, Type to) {
+    return "incompatible assignment from " + from.toString() + " to " + to.toString();
   }
 
-  private static String message2 (String text, 
-				  Type found, 
-				  int expected_storage_class)
-  {
-    return "byte code problem: " + text + "\n"
-	   + "\tFound value of type " + found.toString ()
-	   + ", expected value with storage class "
-	   + Type.nameForStorageClass (expected_storage_class);
+  public IncompatibleTypesException(String text, Type found, int expected_storage_class) {
+    super(message2(text, found, expected_storage_class));
+  }
+
+  private static String message2(String text, Type found, int expected_storage_class) {
+    return "byte code problem: "
+        + text
+        + "\n"
+        + "\tFound value of type "
+        + found.toString()
+        + ", expected value with storage class "
+        + Type.nameForStorageClass(expected_storage_class);
   }
 }

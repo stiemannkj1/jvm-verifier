@@ -24,195 +24,152 @@
 
 package verify.path;
 
-import java.util.*;
-import java.util.zip.*;
 import java.io.*;
 import java.net.*;
+import java.util.*;
+import java.util.zip.*;
 
-final public class SearchPath {
+public final class SearchPath {
 
-    final static String path_seperator = System.getProperty ("path.separator");
-    final static char   path_seperator_char = path_seperator.charAt (0);
-    final static String file_seperator = System.getProperty ("file.separator");
-    final static char   file_seperator_char = file_seperator.charAt (0);
+  static final String path_seperator = System.getProperty("path.separator");
+  static final char path_seperator_char = path_seperator.charAt(0);
+  static final String file_seperator = System.getProperty("file.separator");
+  static final char file_seperator_char = file_seperator.charAt(0);
 
-    private Vector path;
+  private Vector path;
 
-    /**
-     *  Constructs a SearchPath object, given a system path.
-     *  The system path is expected to be seperated by the string 
-     *  defined by the <code>path.seperator</code> property.  
-     *  (<code>":"</code> on unix, <code>;</code> on Windows, etc.).
-     *  The path may contain names of directories, or names of
-     *  .zip or .jar files.  Elements that are neither of these
-     *  are ignored.
-     * @param sys_path the search path
-     */
+  /**
+   * Constructs a SearchPath object, given a system path. The system path is expected to be
+   * seperated by the string defined by the <code>path.seperator</code> property. (<code>":"</code>
+   * on unix, <code>;</code> on Windows, etc.). The path may contain names of directories, or names
+   * of .zip or .jar files. Elements that are neither of these are ignored.
+   *
+   * @param sys_path the search path
+   */
+  public SearchPath(String sys_path) {
+    StringTokenizer st = new StringTokenizer(sys_path, path_seperator);
+    init(st);
+  }
 
-  public SearchPath (String sys_path)
-    {
-      StringTokenizer st = new StringTokenizer (sys_path, path_seperator);
-      init (st);
+  /**
+   * Constructs a SearchPath object, given a Vector of <code>String</code>, <code>File</code> or
+   * <code>URL</code> objects. The path may contain names of directories, or names of .zip or .jar
+   * files. Elements that are neither of these are ignored.
+   *
+   * @param p the vector of search path elements
+   */
+  SearchPath(Vector p) {
+    init(p.elements());
+  }
+
+  public URL getURL(String element) {
+    URL result;
+
+    Enumeration e = path.elements();
+    while (e.hasMoreElements()) {
+      PathEntry ent = (PathEntry) e.nextElement();
+
+      result = ent.getURL(element);
+
+      if (result != null) {
+        return result;
+      }
     }
 
-    /**
-     *  Constructs a SearchPath object, given a Vector of 
-     *  <code>String</code>, <code>File</code> or <code>URL</code>
-     *  objects.  
-     *  The path may contain names of directories, or names of
-     *  .zip or .jar files.  Elements that are neither of these
-     *  are ignored.
-     * @param p the vector of search path elements
-     */
+    return null;
+  }
 
-    SearchPath (Vector p)
-    {
-	init (p.elements ());
+  public InputStream getStream(String element) {
+    InputStream result;
+
+    Enumeration e = path.elements();
+    while (e.hasMoreElements()) {
+      PathEntry ent = (PathEntry) e.nextElement();
+
+      result = ent.getStream(element);
+
+      if (result != null) {
+        return result;
+      }
     }
 
-    public URL getURL (String element)
-    {
-	URL result;
+    return null;
+  }
 
-	Enumeration e = path.elements ();
-	while (e.hasMoreElements ())
-	    {
-		PathEntry ent = (PathEntry) e.nextElement ();
+  public byte[] getBytes(String element) {
+    byte[] result;
 
-		result = ent.getURL (element);
-		
-		if (result != null) 
-		    {
-			return result;
-		    }
-	    }
+    Enumeration e = path.elements();
+    while (e.hasMoreElements()) {
+      PathEntry ent = (PathEntry) e.nextElement();
 
-	return null;
+      result = ent.getBytes(element);
+      if (result != null) {
+        /*
+        System.out.println ("loading " + ent
+        		    + "(" + element + ")");
+             */
+        return result;
+      }
     }
-    
 
-    public InputStream getStream (String element)
-    {
-	InputStream result;
+    return null;
+  }
 
-	Enumeration e = path.elements ();
-	while (e.hasMoreElements ())
-	    {
-		PathEntry ent = (PathEntry) e.nextElement ();
+  private void init(Enumeration st) {
+    path = new Vector();
+    while (st.hasMoreElements()) {
+      Object e = st.nextElement();
 
-		result = ent.getStream (element);
-		
-		if (result != null) 
-		    {
-			return result;
-		    }
-	    }
+      String elem;
+      File efile;
 
-	return null;
+      if (e instanceof URL) {
+        path.addElement(new URLPathEntry((URL) e));
+        continue;
+      }
+
+      if (e instanceof File) {
+        efile = (File) e;
+        elem = efile.getPath();
+      } else if (e instanceof String) {
+        elem = (String) e;
+        efile = new File(elem);
+      } else throw new IllegalArgumentException();
+
+      // make sure it is absolute, so we won't get
+      // trouble if the cwd is changed...
+      if (!efile.isAbsolute()) efile = new File(efile.getAbsolutePath());
+
+      if (efile.isDirectory()) {
+        try {
+          path.addElement(new DirectoryPathEntry(efile));
+        } catch (IOException x) {
+          /* ignore for now */
+        }
+      } else if (efile.isFile()) {
+        int ext = elem.lastIndexOf('.');
+        if (ext == -1) continue;
+
+        String ext_name = elem.substring(ext + 1);
+
+        if (!(ext_name.equalsIgnoreCase("zip") || ext_name.equalsIgnoreCase("jar"))) continue;
+
+        ZipPathEntry zpe = null;
+        try {
+          zpe = new ZipPathEntry(efile);
+        } catch (ZipException zx) {
+          System.err.println("SearchPath::ZipException");
+          zpe = null;
+        } catch (MalformedURLException mx) {
+          System.err.println("SearchPath::URLException");
+          zpe = null;
+        } catch (IOException iox) {
+          System.err.println("SearchPath::IOException");
+          zpe = null;
+        }
+        if (zpe != null) path.addElement(zpe);
+      }
     }
-    
-
-    public byte[] getBytes (String element)
-    {
-	byte[] result;
-
-	Enumeration e = path.elements ();
-	while (e.hasMoreElements ())
-	    {
-		PathEntry ent = (PathEntry) e.nextElement ();
-
-		result = ent.getBytes (element);		
-		if (result != null) 
-		    {
-		      /*
-			System.out.println ("loading " + ent 
-					    + "(" + element + ")");
-		      */
-			return result;
-		    }
-	    }
-
-	return null;
-    }
-    
-
-
-    private void init (Enumeration st)
-    {
-	path = new Vector ();
-	while (st.hasMoreElements ()) 
-	    {  
-		Object e = st.nextElement ();
-
-		String elem;
-		File efile;
-
-		if (e instanceof URL)
-		    {
-			path.addElement (new URLPathEntry ((URL) e));
-			continue;
-		    }
-
-		if (e instanceof File)
-		    {
-			efile = (File) e; 
-			elem = efile.getPath ();
-		    }
-
-		else if (e instanceof String)
-		    {
-			elem = (String) e;
-			efile   = new File (elem); 
-		    }
-
-		else
-		    throw new IllegalArgumentException ();
-
-		// make sure it is absolute, so we won't get 
-		// trouble if the cwd is changed...
-		if (! efile.isAbsolute ())
-		    efile = new File (efile.getAbsolutePath ());
-
-		if (efile.isDirectory ())
-		    {
-			try {
-			    path.addElement(new DirectoryPathEntry (efile));
-			} catch (IOException x) {
-			    /* ignore for now */
-			}
-		    }
-
-		else if (efile.isFile ())
-		    {
-			int ext = elem.lastIndexOf ('.');
-			if (ext == -1)
-			    continue;
-
-			String ext_name = elem.substring(ext+1);
-
-			if (! (   ext_name.equalsIgnoreCase ("zip")
-			       || ext_name.equalsIgnoreCase ("jar")))
-			    continue;
-
-			ZipPathEntry zpe = null;
-			try {
-			    zpe = new ZipPathEntry (efile);
-			} catch (ZipException zx) {
-			    System.err.println ("SearchPath::ZipException");
-			    zpe = null;
-			} catch (MalformedURLException mx) {
-			    System.err.println ("SearchPath::URLException");
-			    zpe = null;
-			} catch (IOException iox) {
-			    System.err.println ("SearchPath::IOException");
-			    zpe = null;
-			}
-			if (zpe != null) path.addElement (zpe);
-		    }
-	    }
-	
-    }
-    
-    
+  }
 }
-

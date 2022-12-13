@@ -1,5 +1,5 @@
 /*
- *  ClassInfo.java 
+ *  ClassInfo.java
  *
  *  Copyright (C) 1999 by Kresten Krab Thorup <krab@daimi.au.dk>
  *
@@ -22,11 +22,10 @@
  *
  */
 
-
 package verify.type;
 
 /*
- *  This is an abstract interface, used by the TypeContext to 
+ *  This is an abstract interface, used by the TypeContext to
  *  establish subclass relationships.  In the use, it masks for
  *  a ClassFile object, but it could also be a cover for a real
  *  Class object, if such a thing is already loaded into the VM.
@@ -34,11 +33,11 @@ package verify.type;
 
 public interface ClassInfo {
 
-  int      getAccessFlags ();
-  String   getClassName ();
-  String   getSuperClassName ();
-  String[] getSuperInterfaceNames ();
+  int getAccessFlags();
 
+  String getClassName();
+
+  String getSuperClassName();
+
+  String[] getSuperInterfaceNames();
 }
-
-

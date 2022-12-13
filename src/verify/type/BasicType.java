@@ -1,5 +1,5 @@
 /*
- *  BasicType.java 
+ *  BasicType.java
  *
  *  Copyright (C) 1999 by Kresten Krab Thorup <krab@daimi.au.dk>
  *
@@ -22,54 +22,40 @@
  *
  */
 
-
 package verify.type;
 
 public class BasicType extends Type {
-    
+
   protected String name;
-  BasicType (TypeContext ctx, int tag, String name)
-  {
-    super (ctx, tag);
+
+  BasicType(TypeContext ctx, int tag, String name) {
+    super(ctx, tag);
     this.name = name;
   }
-    
-  public String toString () { return name; }
 
-  /** 
-   *  Called to verify an assignment of a location of type "this"
-   *  to a new value of type other.
-   */
-  protected void subclassCheckAssignmentFrom (Type other)
-    throws IncompatibleTypesException
-  {
-    if (other == this)
-      return;
+  public String toString() {
+    return name;
+  }
+
+  /** Called to verify an assignment of a location of type "this" to a new value of type other. */
+  protected void subclassCheckAssignmentFrom(Type other) throws IncompatibleTypesException {
+    if (other == this) return;
 
     /* we allow all small integral types to be interchangable */
-    if (storageClass == SC_INT && other.storageClass == SC_INT)
-      return;
+    if (storageClass == SC_INT && other.storageClass == SC_INT) return;
 
-    throw new IncompatibleTypesException (this, other);
+    throw new IncompatibleTypesException(this, other);
   }
 
-  public Type mergeWith (Type other)
-  {
-    if (other == this)
-      return this;
+  public Type mergeWith(Type other) {
+    if (other == this) return this;
 
-    if (other == null)
-      return null;
-    
-    if (storageClass != other.storageClass)
-      return null;
+    if (other == null) return null;
 
-    if (storageClass == SC_INT)
-      return context.INT;
+    if (storageClass != other.storageClass) return null;
 
-    throw new InternalError ("BasicType merge");
+    if (storageClass == SC_INT) return context.INT;
+
+    throw new InternalError("BasicType merge");
   }
-
 }
-
-  

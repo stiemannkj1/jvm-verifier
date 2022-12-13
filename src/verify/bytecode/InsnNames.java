@@ -197,7 +197,7 @@ public interface InsnNames {
   static final int op_if_icmple = 0xa4;
   static final int op_if_acmpeq = 0xa5;
   static final int op_if_acmpne = 0xa6;
-  static final int op_goto = 0xa7; 
+  static final int op_goto = 0xa7;
   static final int op_jsr = 0xa8;
   static final int op_ret = 0xa9;
   static final int op_tableswitch = 0xaa;
@@ -435,8 +435,6 @@ public interface InsnNames {
     "ifnull",
     "ifnonnull",
     "goto_w",
-    "jsr_w" 
+    "jsr_w"
   };
-
-
 }

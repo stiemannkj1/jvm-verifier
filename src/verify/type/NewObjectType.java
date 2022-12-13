@@ -1,5 +1,5 @@
 /*
- *  NewObjectType.java 
+ *  NewObjectType.java
  *
  *  Copyright (C) 1999 by Kresten Krab Thorup <krab@daimi.au.dk>
  *
@@ -22,8 +22,6 @@
  *
  */
 
-
-
 package verify.type;
 
 /*
@@ -38,41 +36,28 @@ package verify.type;
 public class NewObjectType extends Type {
 
   public final ClassType klass;
-  NewObjectType (TypeContext ctx, ClassType klass)
-  {
-    super (ctx, T_NEW);
+
+  NewObjectType(TypeContext ctx, ClassType klass) {
+    super(ctx, T_NEW);
     this.klass = klass;
   }
 
-  protected void subclassCheckAssignmentFrom (Type other)
-    throws IncompatibleTypesException
-  {
-    throw new InternalError
-      ("something is declared of type"+ this);
+  protected void subclassCheckAssignmentFrom(Type other) throws IncompatibleTypesException {
+    throw new InternalError("something is declared of type" + this);
   }
 
-  public String toString ()
-  {
-    return "<uninitialized " + klass + ">"; 
+  public String toString() {
+    return "<uninitialized " + klass + ">";
   }
 
-  public Type mergeWith (Type other)
-  {
-    if (other == null)
-      return null;
-    
-    if (other.tag != T_NEW)
-      return null;
+  public Type mergeWith(Type other) {
+    if (other == null) return null;
 
-    NewObjectType ao = (NewObjectType)other;
+    if (other.tag != T_NEW) return null;
 
-    if (ao.klass == klass)
-      return this;
+    NewObjectType ao = (NewObjectType) other;
 
-    else
-      return null;
+    if (ao.klass == klass) return this;
+    else return null;
   }
-
-  
-
 }

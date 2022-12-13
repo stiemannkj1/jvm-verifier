@@ -1,5 +1,5 @@
 /*
- *  IllegalTypeNameException.java 
+ *  IllegalTypeNameException.java
  *
  *  Copyright (C) 1999 by Kresten Krab Thorup <krab@daimi.au.dk>
  *
@@ -26,6 +26,7 @@ package verify.type;
 
 public class IllegalTypeNameException extends verify.VerificationException {
 
-  IllegalTypeNameException (String type) { super (type); }
-
+  IllegalTypeNameException(String type) {
+    super(type);
+  }
 }

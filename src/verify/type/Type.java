@@ -1,5 +1,5 @@
 /*
- *  Type.java 
+ *  Type.java
  *
  *  Copyright (C) 1999 by Kresten Krab Thorup <krab@daimi.au.dk>
  *
@@ -24,114 +24,102 @@
 
 package verify.type;
 
-public abstract class Type implements TypeTags
-{
+public abstract class Type implements TypeTags {
 
   // this holds the specific tag for this type
   public final int tag;
 
-  // The context defining this type.  
+  // The context defining this type.
   public final TypeContext context;
 
   // the id of this type in the given type context.
-  public final int storageClass; 
+  public final int storageClass;
 
   // if non-null, points to array type for this kind of element.
   ArrayType arrayType;
 
-  protected Type (TypeContext ctx, int tag) 
-  {
-    this.tag           = tag;
-    this.context       = ctx;
-    this.storageClass  = computeStorageClass (tag);
+  protected Type(TypeContext ctx, int tag) {
+    this.tag = tag;
+    this.context = ctx;
+    this.storageClass = computeStorageClass(tag);
   }
 
   // this is designed, so it can easily be inlined.
-  public final void checkAssignmentFrom (Type other)
-    throws verify.VerificationException
-  {
-    if (other == this)
-      return;
+  public final void checkAssignmentFrom(Type other) throws verify.VerificationException {
+    if (other == this) return;
 
     // any reference type can have null assigned to it.
-    if (storageClass == T_ADDR && other.tag == T_NULL)
-      return;
+    if (storageClass == T_ADDR && other.tag == T_NULL) return;
 
-    subclassCheckAssignmentFrom (other);
+    subclassCheckAssignmentFrom(other);
   }
 
-  protected abstract void subclassCheckAssignmentFrom (Type other)
-    throws verify.VerificationException;
+  protected abstract void subclassCheckAssignmentFrom(Type other)
+      throws verify.VerificationException;
 
-  public String storageClassName ()
-  {
-    return nameForStorageClass (storageClass);
+  public String storageClassName() {
+    return nameForStorageClass(storageClass);
   }
 
-  public static int computeStorageClass (int tag)
-  {
-    switch (tag)
-      {
-      case T_BOOLEAN: case T_CHAR: case T_BYTE:
-      case T_SHORT: case T_INT:
-	return SC_INT;
+  public static int computeStorageClass(int tag) {
+    switch (tag) {
+      case T_BOOLEAN:
+      case T_CHAR:
+      case T_BYTE:
+      case T_SHORT:
+      case T_INT:
+        return SC_INT;
 
-      case T_ARRAY: case T_CLASS:
-      case T_ADDR: case T_NULL:
-	return SC_ADDR;
+      case T_ARRAY:
+      case T_CLASS:
+      case T_ADDR:
+      case T_NULL:
+        return SC_ADDR;
 
       default:
-	return tag;
-      }
+        return tag;
+    }
   }
 
-  public static String nameForStorageClass (int class0)
-  {
-    switch (class0)
-      {
+  public static String nameForStorageClass(int class0) {
+    switch (class0) {
       case SC_INT:
-	return "integer";
+        return "integer";
 
       case SC_FLOAT:
-	return "float";
+        return "float";
 
       case SC_DOUBLE:
-	return "double/1";
+        return "double/1";
 
       case SC_DOUBLE2:
-	return "double/2";
-	
+        return "double/2";
+
       case SC_LONG:
-	return "long/1";
+        return "long/1";
 
       case SC_LONG2:
-	return "long/2";
+        return "long/2";
 
       case SC_NEW:
-	return "new object";
+        return "new object";
 
       case SC_ADDR:
-	return "reference";
+        return "reference";
 
       default:
-	throw new InternalError ("no such storage class " + class0);
-      }
+        throw new InternalError("no such storage class " + class0);
+    }
   }
-  
+
   /**
-   *  Certain other values, are OK in place of arrays, ...
-   *  If an array operation (store/load) is attempted on an Type
-   *  for which this method answers true, then we would have to insert
-   *  some kind of runtime check...
+   * Certain other values, are OK in place of arrays, ... If an array operation (store/load) is
+   * attempted on an Type for which this method answers true, then we would have to insert some kind
+   * of runtime check...
    */
-  public boolean isAnonymousArray ()
-  {
+  public boolean isAnonymousArray() {
     return tag == T_NULL;
   }
 
-  abstract public Type mergeWith (Type other)
-    throws verify.VerificationException;
+  public abstract Type mergeWith(Type other) throws verify.VerificationException;
 }
-
-
-

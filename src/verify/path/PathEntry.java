@@ -24,43 +24,36 @@
 
 package verify.path;
 
-import java.util.*;
-import java.util.zip.*;
 import java.io.*;
 import java.net.*;
-
-
-
+import java.util.*;
+import java.util.zip.*;
 
 abstract class PathEntry {
-    abstract URL getURL (String file);
-    abstract InputStream getStream (String file);
-    abstract byte[] getBytes (String file);
+  abstract URL getURL(String file);
 
-    protected static byte[] readbytes (InputStream is, int length)
-    {
-	try {
+  abstract InputStream getStream(String file);
 
-	    byte[] data = new byte[length];
-	    int read; 
-	    int off = 0;
-	    
-	    while (off != length)
-		{
-		    read = is.read (data, off, (int) (length-off));
+  abstract byte[] getBytes(String file);
 
-		    if (read == -1) 
-			return null;
+  protected static byte[] readbytes(InputStream is, int length) {
+    try {
 
-		    off += read;
-		}
-	    
-	    return data;
-	} catch (IOException x) {
-	    return null;
-	}
+      byte[] data = new byte[length];
+      int read;
+      int off = 0;
+
+      while (off != length) {
+        read = is.read(data, off, (int) (length - off));
+
+        if (read == -1) return null;
+
+        off += read;
+      }
+
+      return data;
+    } catch (IOException x) {
+      return null;
     }
-
+  }
 }
-
-

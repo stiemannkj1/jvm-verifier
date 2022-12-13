@@ -22,7 +22,6 @@
  *
  */
 
-
 package verify;
 
 import verify.classfile.ClassFile;
@@ -32,41 +31,31 @@ public class ClassFileInfo implements ClassInfo {
 
   private final ClassFile file;
 
-  public ClassFileInfo (ClassFile c) { file = c; }
+  public ClassFileInfo(ClassFile c) {
+    file = c;
+  }
 
-  public int getAccessFlags ()
-    {
-      return file.access_flags;
-    }  
-    
-  public String   getClassName ()
-    {
-      return file.pool.get_class (file.this_class);
+  public int getAccessFlags() {
+    return file.access_flags;
+  }
+
+  public String getClassName() {
+    return file.pool.get_class(file.this_class);
+  }
+
+  public String getSuperClassName() {
+    if (file.super_class != 0) return file.pool.get_class(file.super_class);
+    else return null;
+  }
+
+  public String[] getSuperInterfaceNames() {
+    if (file.interfaces_count == 0) return null;
+
+    String[] result = new String[file.interfaces_count];
+    for (int i = 0; i < file.interfaces_count; i++) {
+      result[i] = file.pool.get_class(file.interfaces[i]);
     }
-    
-  public String   getSuperClassName ()
-    {
-      if (file.super_class != 0)
-	return file.pool.get_class (file.super_class);
-      else
-	return null;
-    }
-    
-  public String[] getSuperInterfaceNames ()
-    {
-      if (file.interfaces_count == 0)
-	return null;
-	
-      String[] result = new String[file.interfaces_count];
-      for (int i = 0; i < file.interfaces_count; i++)
-	{
-	  result[i] = file.pool.get_class (file.interfaces[i]);
-	}
-	
-      return result;
-    }
-    
-    
+
+    return result;
+  }
 }
-
-

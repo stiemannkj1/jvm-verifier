@@ -1,5 +1,5 @@
 /*
- *  ClassInfoProvider.java 
+ *  ClassInfoProvider.java
  *
  *  Copyright (C) 1999 by Kresten Krab Thorup <krab@daimi.au.dk>
  *
@@ -22,10 +22,8 @@
  *
  */
 
-
 package verify.type;
 
-public interface ClassInfoProvider
-{
-  public abstract ClassInfo provide (String name);
+public interface ClassInfoProvider {
+  public abstract ClassInfo provide(String name);
 }

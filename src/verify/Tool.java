@@ -22,288 +22,226 @@
  *
  */
 
-
 package verify;
 
-import verify.classfile.ClassFile;
-import java.io.FileInputStream;
-import java.io.File;
 import java.util.Hashtable;
+import verify.classfile.ClassFile;
 import verify.path.SearchPath;
-import verify.type.ClassInfoProvider;
 import verify.type.ClassInfo;
+import verify.type.ClassInfoProvider;
 
-class Tool 
-{
+class Tool {
   ClassFileLoader provider;
-  
 
   static long total_checking = 0L;
 
-  public static void main (String[] args)
-  {
+  public static void main(String[] args) {
     String filename = "";
-     
+
     int files_loaded = 0;
 
-    Hashtable options = new Hashtable ();
+    Hashtable options = new Hashtable();
 
-    options.put ("verbose", "false");
-    options.put ("stats", "false");
-    options.put ("banner", "true");
-    options.put ("classpath", System.getProperty ("java.class.path", "."));
+    options.put("verbose", "false");
+    options.put("stats", "false");
+    options.put("banner", "true");
+    options.put("classpath", System.getProperty("java.class.path", "."));
 
     int i;
     for (i = 0; i < args.length; i++) {
       String arg = args[i];
 
-      if (arg.startsWith ("--")) {
-	int eq = arg.indexOf ('=');
-	if (eq != -1)
-	  {
-	    options.put (arg.substring (2, eq), 
-			 arg.substring (eq+1));
-	  }
-	else
-	  {
-	    options.put (arg.substring (2), "true");
-	  }
+      if (arg.startsWith("--")) {
+        int eq = arg.indexOf('=');
+        if (eq != -1) {
+          options.put(arg.substring(2, eq), arg.substring(eq + 1));
+        } else {
+          options.put(arg.substring(2), "true");
+        }
 
-	/* skip to next arg */
-	continue;
+        /* skip to next arg */
+        continue;
       } else {
-	break;
+        break;
       }
-
     }
 
+    if ((new Boolean((String) options.get("banner"))).booleanValue()) {
+      System.err.println("------------------------------" + "------------------------------");
+      System.err.println("Kresten's Verifier for Java Byte Codes, 0.1");
+      System.err.println("Copyright (C) 1999 Kresten Krab Thorup " + "<krab@gnu.org>");
+      System.err.println("This is free software with " + "ABSOLUTELY NO WARRANTY");
+      System.err.println("------------------------------" + "------------------------------");
+    }
 
-    if ((new Boolean ((String) options.get ("banner"))).booleanValue ())
-      {
-	System.err.println (  "------------------------------"
-			    + "------------------------------");
-	System.err.println (  "Kresten's Verifier for Java Byte Codes, 0.1");
-	System.err.println (  "Copyright (C) 1999 Kresten Krab Thorup " 
-			    + "<krab@gnu.org>");
-	System.err.println (  "This is free software with "
-			    + "ABSOLUTELY NO WARRANTY");
-	System.err.println (  "------------------------------"
-			    + "------------------------------");
+    if (i == args.length) {
+      System.err.println("usage: java verify.Tool " + "[options] class-name...\n");
+      System.err.println("    --classpath=path " + "      (defaults to built-in class path)");
+      System.err.println("    --verbose=false ");
+      System.err.println("    --banner=true ");
+      System.err.println("    --stats=false ");
+      System.err.println("");
+      System.err.println(
+          "If you pass names of .class files, it will "
+              + "try to be clever\nand guess what you mean."
+              + "  For a program designed to report\nerrors, "
+              + "this one currently does a poor job.  You may "
+              + "find\nyourself looking at wierd stack traces "
+              + "and stuff.  Checking\nmany classes in one run "
+              + "is faster than running the tool\nfor each file "
+              + "in turn.  ");
+      System.err.println("------------------------------" + "------------------------------");
+      System.exit(0);
+    }
+
+    ClassFileLoader provider = new ClassFileLoader((String) options.get("classpath"));
+
+    verify.type.TypeContext context = new verify.type.TypeContext(provider);
+
+    verify.bytecode.BytecodeVerifier verifier = new verify.bytecode.BytecodeVerifier(context);
+
+    for (; i < args.length; i++) {
+      String cls = args[i];
+
+      long iccount = verify.bytecode.BytecodeVerifier.instruction_check_count;
+      long insn_pr_sec = (iccount * 1000L) / (total_checking + 1);
+
+      System.err.print(cls + ":");
+
+      // Try to make a class name out of a file name.
+      // Hackish, but it works for me...
+      if (cls.endsWith(".class")) {
+        int idx;
+
+        if (cls.startsWith("./")) cls = cls.substring(2, cls.length() - 6);
+        else if ((idx = cls.indexOf("/classes/")) != -1)
+          cls = cls.substring(idx + 9, cls.length() - 6);
+        else cls = cls.substring(0, cls.length() - 6);
+
+        cls = cls.replace('/', '.');
       }
 
-    if (i == args.length)
-      {
-	System.err.println (  "usage: java verify.Tool "
-			    + "[options] class-name...\n");
-	System.err.println ("    --classpath=path "
-			    + "      (defaults to built-in class path)");
-	System.err.println ("    --verbose=false ");
-	System.err.println ("    --banner=true ");
-	System.err.println ("    --stats=false ");
-	System.err.println ("");
-	System.err.println ("If you pass names of .class files, it will "
-			    +"try to be clever\nand guess what you mean."
-			    +"  For a program designed to report\nerrors, "
-			    +"this one currently does a poor job.  You may "
-			    +"find\nyourself looking at wierd stack traces "
-			    +"and stuff.  Checking\nmany classes in one run "
-			    +"is faster than running the tool\nfor each file "
-			    +"in turn.  ");
-	System.err.println (  "------------------------------"
-			    + "------------------------------");
-	System.exit (0);
+      long then = System.currentTimeMillis();
+
+      ClassFile cf = provider.load(cls);
+      if (cf == null) {
+        System.err.println("not found.");
+        continue;
       }
 
-    ClassFileLoader provider 
-      = new ClassFileLoader ((String) options.get ("classpath"));
+      files_loaded += 1;
 
-    verify.type.TypeContext context
-      = new verify.type.TypeContext (provider);
+      long hence = System.currentTimeMillis();
 
-    verify.bytecode.BytecodeVerifier verifier 
-      = new verify.bytecode.BytecodeVerifier (context);
+      verifier.verify(cf, options);
 
-    for (; i < args.length; i++)
-      {
-	String cls = args[i];
+      provider.unload(args[i]);
 
-	long iccount 
-	  = verify.bytecode.BytecodeVerifier.instruction_check_count;
-	long insn_pr_sec = (iccount*1000L)/(total_checking+1);
+      long now = System.currentTimeMillis();
+      System.err.println(" [" + (hence - then) + "+" + (now - hence) + "ms]");
 
-	System.err.print (cls+":");
-
-	// Try to make a class name out of a file name.
-	// Hackish, but it works for me...
-	if (cls.endsWith (".class"))
-	  {
-	    int idx;
-
-	    if (cls.startsWith ("./"))
-	      cls = cls.substring (2, cls.length ()-6);
-	    else if ((idx=cls.indexOf ("/classes/")) != -1)
-	      cls = cls.substring (idx+9, cls.length()-6);
-	    else
-	      cls = cls.substring (0, cls.length ()-6);
-
-	    cls = cls.replace ('/', '.');
-	  }
-
-	long then = System.currentTimeMillis ();
-
-	ClassFile cf = provider.load (cls);
-	if (cf == null)
-	  { System.err.println ("not found."); continue; }
-
-	files_loaded += 1;
-
-	long hence = System.currentTimeMillis ();
-
-	verifier.verify (cf, options);
-
-	provider.unload (args[i]);
-
-	long now = System.currentTimeMillis ();
-	System.err.println (" ["+(hence-then)+"+"+(now-hence)+"ms]");
-
-	total_checking += (now-hence);
+      total_checking += (now - hence);
     }
 
     long total_loading = ClassFileLoader.total_loading;
-    long total = total_checking+total_loading;
+    long total = total_checking + total_loading;
 
-    if ((new Boolean ((String) options.get ("stats"))).booleanValue ())
-      {
-	System.out.println ("=================================");
-	System.out.println ("          total times");
-	System.out.println ("=================================");
-	System.out.println (" loading  : "
-			    + (total_loading*100/total) + "% ("
-			    + total_loading  + "ms) "
-			    );
+    if ((new Boolean((String) options.get("stats"))).booleanValue()) {
+      System.out.println("=================================");
+      System.out.println("          total times");
+      System.out.println("=================================");
+      System.out.println(
+          " loading  : " + (total_loading * 100 / total) + "% (" + total_loading + "ms) ");
 
-	System.out.println (" average  : " 
-			    + (total_loading/files_loaded) + " msec/file");
+      System.out.println(" average  : " + (total_loading / files_loaded) + " msec/file");
 
-	System.out.println ("=================================");
+      System.out.println("=================================");
 
-	System.out.println (" checking : " 
-			    + (total_checking*100/total) + "% ("
-			    + total_checking + "ms) "
-			    );
-	long icount
-	  = verify.bytecode.BytecodeVerifier.instruction_count;
+      System.out.println(
+          " checking : " + (total_checking * 100 / total) + "% (" + total_checking + "ms) ");
+      long icount = verify.bytecode.BytecodeVerifier.instruction_count;
 
-	long iccount 
-	  = verify.bytecode.BytecodeVerifier.instruction_check_count;
+      long iccount = verify.bytecode.BytecodeVerifier.instruction_check_count;
 
-	long nsec_pr_insn = (total_checking*1000L)/iccount;
+      long nsec_pr_insn = (total_checking * 1000L) / iccount;
 
-	long insn_pr_sec = (iccount*1000L)/total_checking;
+      long insn_pr_sec = (iccount * 1000L) / total_checking;
 
-	/*
-	System.out.println (" total    : " + icount + " insns");
+      /*
+      System.out.println (" total    : " + icount + " insns");
 
-	System.out.println (" checked  : " + iccount + " insns");
-	*/
+      System.out.println (" checked  : " + iccount + " insns");
+      */
 
-	System.out.println (" mainloop : " 
-			    + insn_pr_sec + " insn/sec");
+      System.out.println(" mainloop : " + insn_pr_sec + " insn/sec");
 
+      System.out.println("=================================");
 
-	System.out.println ("=================================");
+      System.out.println(" over all : " + (total_loading + total_checking) + "ms");
 
-	System.out.println (" over all : " 
-			    + (total_loading+total_checking) 
-			    + "ms");
-
-	System.out.println ("       or : " 
-			    + ((files_loaded*1000L)
-			       /(total_loading+total_checking))
-			    + " classes/sec");
-	System.out.println ("=================================");
-
-
-      } 
-
+      System.out.println(
+          "       or : "
+              + ((files_loaded * 1000L) / (total_loading + total_checking))
+              + " classes/sec");
+      System.out.println("=================================");
+    }
   }
-
-
 }
 
-
-class ClassFileLoader implements ClassInfoProvider
-{
+class ClassFileLoader implements ClassInfoProvider {
   final SearchPath path;
-  char filesep = System.getProperty ("file.separator", "/").charAt (0);
+  char filesep = System.getProperty("file.separator", "/").charAt(0);
 
-  Hashtable table = new Hashtable ();
+  Hashtable table = new Hashtable();
 
-  ClassFileLoader (String loadpath)
-  {
-    path = new SearchPath (loadpath);
+  ClassFileLoader(String loadpath) {
+    path = new SearchPath(loadpath);
   }
 
   static long total_loading = 0L;
 
   /* this is the method made available to the system */
-  public ClassFile load (String class_name)
-  {
-    ClassFile result = (ClassFile)table.get (class_name);
-    
-    long now = System.currentTimeMillis ();
+  public ClassFile load(String class_name) {
+    ClassFile result = (ClassFile) table.get(class_name);
 
-    if (result == null)
-      {
-	String filename = class_name.replace ('.', filesep) + ".class";
+    long now = System.currentTimeMillis();
 
-	byte[] data = path.getBytes (filename);
+    if (result == null) {
+      String filename = class_name.replace('.', filesep) + ".class";
 
-	if (data == null)
-	  {
-	    return null;
-	  }
+      byte[] data = path.getBytes(filename);
 
-	try {
-
-	  result = new ClassFile (data);
-
-	} catch (ClassFormatError err) {
-	  
-	  System.err.println ("error with class format of "+class_name
-			      + "\n"+err);
-	  return null;
-	}
-
-	table.put (class_name, result);
-      }
-    else
-      {
-	unload (class_name);
+      if (data == null) {
+        return null;
       }
 
-    total_loading += (System.currentTimeMillis () - now);
+      try {
+
+        result = new ClassFile(data);
+
+      } catch (ClassFormatError err) {
+
+        System.err.println("error with class format of " + class_name + "\n" + err);
+        return null;
+      }
+
+      table.put(class_name, result);
+    } else {
+      unload(class_name);
+    }
+
+    total_loading += (System.currentTimeMillis() - now);
 
     return result;
   }
 
-  public void unload (String class_name)
-  {
-    table.remove (class_name);
+  public void unload(String class_name) {
+    table.remove(class_name);
   }
 
-
-  public ClassInfo provide (String name)
-  {
-    ClassFile file = load (name);
-    if (file != null)
-      return new ClassFileInfo (file);
-    else
-      return null;
+  public ClassInfo provide(String name) {
+    ClassFile file = load(name);
+    if (file != null) return new ClassFileInfo(file);
+    else return null;
   }
-
-
-
 }
-
-

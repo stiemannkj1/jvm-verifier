@@ -22,57 +22,51 @@
  *
  */
 
-
 package verify.path;
 
-import java.util.*;
-import java.util.zip.*;
 import java.io.*;
 import java.net.*;
-
+import java.util.*;
+import java.util.zip.*;
 
 final class CacheEntry {
-    String   dir;
-    String[] files;
-    long     time;
-    
-    CacheEntry (String d)
-    {
-	dir = d;
-	files = new File(dir).list();
-	time = System.currentTimeMillis ();
-    }
-    
-    void touch ()
-    {
-	time = System.currentTimeMillis ();
-    }
-    
-    final long EXPIRATION_TIME_MS = 10000;
-    
-    boolean old () {
-	return (System.currentTimeMillis () - time) > EXPIRATION_TIME_MS;
-    }
-    
-    public int hashCode () { return dir.hashCode(); }
-    boolean contains (String file) { 
-	if (files == null)
-	    return false;
-	
-	int index = file.lastIndexOf(SearchPath.file_seperator_char);
-	String f;
-	
-	if (index == -1)
-	    f = file;
-	else
-	    f = file.substring (index+1);
-	
-	for (int i = 0; i < files.length; i++)
-	    {
-		if (f.equals (files[i])) return true;
-	    }
-	
-	return false;
-    }
-}
+  String dir;
+  String[] files;
+  long time;
 
+  CacheEntry(String d) {
+    dir = d;
+    files = new File(dir).list();
+    time = System.currentTimeMillis();
+  }
+
+  void touch() {
+    time = System.currentTimeMillis();
+  }
+
+  final long EXPIRATION_TIME_MS = 10000;
+
+  boolean old() {
+    return (System.currentTimeMillis() - time) > EXPIRATION_TIME_MS;
+  }
+
+  public int hashCode() {
+    return dir.hashCode();
+  }
+
+  boolean contains(String file) {
+    if (files == null) return false;
+
+    int index = file.lastIndexOf(SearchPath.file_seperator_char);
+    String f;
+
+    if (index == -1) f = file;
+    else f = file.substring(index + 1);
+
+    for (int i = 0; i < files.length; i++) {
+      if (f.equals(files[i])) return true;
+    }
+
+    return false;
+  }
+}

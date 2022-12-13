@@ -1,5 +1,5 @@
 /*
- *  TypeTags.java 
+ *  TypeTags.java
  *
  *  Copyright (C) 1999 by Kresten Krab Thorup <krab@daimi.au.dk>
  *
@@ -22,37 +22,33 @@
  *
  */
 
-
 package verify.type;
 
 public interface TypeTags {
 
   public static final int T_BOOLEAN = 'Z';
-  public static final int T_CHAR    = 'C';
-  public static final int T_BYTE    = 'B';
-  public static final int T_SHORT   = 'S';
-  public static final int T_INT     = 'I';
+  public static final int T_CHAR = 'C';
+  public static final int T_BYTE = 'B';
+  public static final int T_SHORT = 'S';
+  public static final int T_INT = 'I';
 
-  public static final int T_LONG    = 'J';
-  public static final int T_LONG2   = 'X';
+  public static final int T_LONG = 'J';
+  public static final int T_LONG2 = 'X';
 
-  public static final int T_FLOAT   = 'F';
+  public static final int T_FLOAT = 'F';
 
-  public static final int T_DOUBLE  = 'D';
+  public static final int T_DOUBLE = 'D';
   public static final int T_DOUBLE2 = 'Q';
 
-  public static final int T_VOID    = 'V';
+  public static final int T_VOID = 'V';
 
-  public static final int T_ARRAY   = '[';
-  public static final int T_CLASS   = '#';
-  public static final int T_ADDR    = '*';
-  public static final int T_NEW     = '@';
-  public static final int T_NULL    = '!';
+  public static final int T_ARRAY = '[';
+  public static final int T_CLASS = '#';
+  public static final int T_ADDR = '*';
+  public static final int T_NEW = '@';
+  public static final int T_NULL = '!';
 
-
-	
-  /** storage classes for the checker!  */
-
+  /** storage classes for the checker! */
   public static final int SC_INT = T_INT;
 
   public static final int SC_FLOAT = T_FLOAT;
@@ -65,5 +61,4 @@ public interface TypeTags {
 
   public static final int SC_NEW = T_NEW;
   public static final int SC_ADDR = T_ADDR;
-
 }

@@ -22,62 +22,49 @@
  *
  */
 
-
 package verify.type;
 
 public class AddressType extends BasicType {
 
   final int return_pc;
 
-  public int hashCode () { return name.hashCode (); }
-  
-  public boolean equals (Object other)
-  {
-    if (other instanceof AddressType)
-      {
-	AddressType bo = (AddressType)other;
-	return return_pc == bo.return_pc;
-      }
+  public int hashCode() {
+    return name.hashCode();
+  }
+
+  public boolean equals(Object other) {
+    if (other instanceof AddressType) {
+      AddressType bo = (AddressType) other;
+      return return_pc == bo.return_pc;
+    }
     return false;
   }
 
   /* this should return something that cannot be confused with a class
-     name, becuase TypeContext keeps them in the same hash table using
-     this value as the key.  */
+  name, becuase TypeContext keeps them in the same hash table using
+  this value as the key.  */
 
-  static String nameFor (int pc)
-  {
-    return "0x" + Integer.toHexString (pc);
+  static String nameFor(int pc) {
+    return "0x" + Integer.toHexString(pc);
   }
 
-  AddressType (TypeContext ctx, int pc) 
-  {
-    super (ctx, T_ADDR, nameFor (pc));
+  AddressType(TypeContext ctx, int pc) {
+    super(ctx, T_ADDR, nameFor(pc));
     return_pc = pc;
   }
 
-  public int pc ()
-  {
+  public int pc() {
     return return_pc;
   }
 
-  public Type mergeWith (Type other)
-  {
-    if (other == null)
-      return null;
-    
-    if (other.tag != T_ADDR)
-      return null;
+  public Type mergeWith(Type other) {
+    if (other == null) return null;
 
-    AddressType ao = (AddressType)other;
+    if (other.tag != T_ADDR) return null;
 
-    if (ao.return_pc == return_pc)
-      return this;
+    AddressType ao = (AddressType) other;
 
-    else
-      return null;
+    if (ao.return_pc == return_pc) return this;
+    else return null;
   }
-
-
-
 }
