@@ -69,7 +69,16 @@ public class BytecodeVerifier implements InsnNames, TypeTags, ClassFileConstants
 
     for (int i = 0; i < all.length; i++) {
       ClassFile.Method m = all[i];
-      check(m);
+
+      final String method = (String) options.get("method");
+
+      if (method == null
+          || method.equals(m.name())
+          || method.equals(m.name() + "#" + m.signature())) {
+        check(m);
+      } else if (log3) {
+        log("skipping method " + m.name() + "#" + m.signature());
+      }
     }
   }
 
@@ -417,6 +426,7 @@ public class BytecodeVerifier implements InsnNames, TypeTags, ClassFileConstants
                     + (pc - 1 - pc_offset)
                     + " "
                     + insn_name[opcode]);
+            log(state.dump(false));
           }
 
           switch (opcode) {
